@@ -117,7 +117,7 @@ namespace JSC {
         template<typename IntegralType>
         void putIntegral(IntegralType value)
         {
-            if (m_size > m_capacity - sizeof(IntegralType))
+            if (m_size > m_capacity - ((ssize_t)sizeof(IntegralType)))
                 grow();
             putIntegralUnchecked(value);
         }
