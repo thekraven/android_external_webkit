@@ -35,27 +35,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <elf.h>
-#include <asm/hwcap.h>
 #endif
 
 namespace JSC {
 
 static bool isVFPPresent()
 {
-#if OS(LINUX)
-    int fd = open("/proc/self/auxv", O_RDONLY);
-    if (fd > 0) {
-        Elf32_auxv_t aux;
-        while (read(fd, &aux, sizeof(Elf32_auxv_t))) {
-            if (aux.a_type == AT_HWCAP) {
-                close(fd);
-                return aux.a_un.a_val & HWCAP_VFP;
-            }
-        }
-        close(fd);
-    }
-#endif
 
 #if (COMPILER(RVCT) && defined(__TARGET_FPU_VFP)) || (COMPILER(GCC) && defined(__VFP_FP__))
     return true;
