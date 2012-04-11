@@ -1810,7 +1810,7 @@ void Document::removeAllEventListeners()
 
     if (DOMWindow* domWindow = this->domWindow())
         domWindow->removeAllEventListeners();
-    for (Node* node = firstChild(); node; node = node->traverseNextNode())
+    for (Node* node = firstChild(); node; node = node->traverseNextNodeFastPath())
         node->removeAllEventListeners();
 }
 
