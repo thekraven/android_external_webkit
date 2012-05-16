@@ -389,6 +389,11 @@ ifeq ($(WEBCORE_INSTRUMENTATION),true)
 LOCAL_CFLAGS += -DANDROID_INSTRUMENT
 endif
 
+ifeq ($(WEBVIEW_SUSPEND_VIDEOS_IN_BACKGROUND_TAB), true)
+LOCAL_CFLAGS += -DWEBVIEW_SUSPEND_VIDEOS_IN_BACKGROUND_TAB
+endif
+
+
 # LOCAL_LDLIBS is used in simulator builds only and simulator builds are only
 # valid on Linux
 LOCAL_LDLIBS += -lpthread -ldl
