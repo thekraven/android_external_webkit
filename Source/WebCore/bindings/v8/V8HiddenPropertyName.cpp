@@ -44,7 +44,7 @@ namespace WebCore {
 #define V8_DEFINE_PROPERTY(name) \
 v8::Handle<v8::String> V8HiddenPropertyName::name() \
 { \
-    static v8::Persistent<v8::String>* string = createString("WebCore::V8HiddenPropertyName::" V8_AS_STRING(name)); \
+    static v8::Persistent<v8::String>* string = createString("WebCore::HiddenProperty::" V8_AS_STRING(name)); \
     return *string; \
 }
 
