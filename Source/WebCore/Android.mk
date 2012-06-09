@@ -340,6 +340,7 @@ LOCAL_SRC_FILES := $(LOCAL_SRC_FILES) \
 	html/HTMLParserErrorCodes.cpp \
 	html/HTMLTableRowsCollection.cpp \
 	html/HTMLViewSourceDocument.cpp \
+	html/HTMLWbrElement.cpp \
 	html/HiddenInputType.cpp \
 	html/ImageData.cpp \
 	html/ImageDocument.cpp \
