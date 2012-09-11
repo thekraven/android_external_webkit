@@ -35,7 +35,7 @@ js_binding_scripts := \
 # Add ACCELERATED_COMPOSITING=1 and ENABLE_3D_RENDERING=1 for layers support
 FEATURE_DEFINES := ENABLE_ORIENTATION_EVENTS=1 ENABLE_TOUCH_EVENTS=1 ENABLE_DATABASE=1 ENABLE_OFFLINE_WEB_APPLICATIONS=1 ENABLE_DOM_STORAGE=1 ENABLE_VIDEO=1 ENABLE_GEOLOCATION=1 ENABLE_CONNECTION=1 ENABLE_APPLICATION_INSTALLED=1 ENABLE_XPATH=1 ENABLE_XSLT=1 ENABLE_DEVICE_ORIENTATION=1 ENABLE_FILE_READER=1 ENABLE_BLOB=1 ENABLE_WEB_TIMING=1
 # The defines above should be identical to those for JSC.
-FEATURE_DEFINES += V8_BINDING ENABLE_FLOAT64ARRAY=1
+FEATURE_DEFINES += V8_BINDING
 
 ifeq ($(ENABLE_SVG), true)
     FEATURE_DEFINES += ENABLE_SVG=1
@@ -344,7 +344,6 @@ GEN := \
     $(intermediates)/bindings/V8CanvasRenderingContext2D.h \
     $(intermediates)/bindings/V8DataView.h \
     $(intermediates)/bindings/V8Float32Array.h \
-    $(intermediates)/bindings/V8Float64Array.h \
     $(intermediates)/bindings/V8Int8Array.h \
     $(intermediates)/bindings/V8Int16Array.h \
     $(intermediates)/bindings/V8Int32Array.h \

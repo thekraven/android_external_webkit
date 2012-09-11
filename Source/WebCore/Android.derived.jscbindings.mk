@@ -316,7 +316,6 @@ GEN := \
     $(intermediates)/html/canvas/JSCanvasRenderingContext2D.h \
     $(intermediates)/html/canvas/JSDataView.h \
     $(intermediates)/html/canvas/JSFloat32Array.h \
-    $(intermediates)/html/canvas/JSFloat64Array.h \
     $(intermediates)/html/canvas/JSInt8Array.h \
     $(intermediates)/html/canvas/JSInt16Array.h \
     $(intermediates)/html/canvas/JSInt32Array.h \
