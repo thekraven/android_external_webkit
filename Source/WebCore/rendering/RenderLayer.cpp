@@ -1138,14 +1138,6 @@ void RenderLayer::insertOnlyThisLayer()
         RenderLayer* parentLayer = renderer()->parent()->enclosingLayer();
         ASSERT(parentLayer);
         RenderLayer* beforeChild = parentLayer->reflectionLayer() != this ? renderer()->parent()->findNextLayer(parentLayer, renderer()) : 0;
-        if(!beforeChild && renderer()->previousSibling())
-        {
-            RenderLayer* layer = renderer()->previousSibling()->enclosingLayer();
-
-            if(layer != NULL  && layer->parent() == parentLayer)
-                beforeChild = layer;
-        }
-
         parentLayer->addChild(this, beforeChild);
     }
 
@@ -1420,12 +1412,10 @@ void RenderLayer::scrollTo(int x, int y)
         // The caret rect needs to be invalidated after scrolling
         frame->selection()->setCaretRectNeedsUpdate();
 
-#if !ENABLE(ANDROID_OVERFLOW_SCROLL)
         FloatQuad quadForFakeMouseMoveEvent = FloatQuad(rectForRepaint);
         if (repaintContainer)
             quadForFakeMouseMoveEvent = repaintContainer->localToAbsoluteQuad(quadForFakeMouseMoveEvent);
         frame->eventHandler()->dispatchFakeMouseMoveEventSoonInQuad(quadForFakeMouseMoveEvent);
-#endif
     }
 
     // Just schedule a full repaint of our object.

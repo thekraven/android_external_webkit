@@ -1,6 +1,5 @@
 /*
  * Copyright 2006, The Android Open Source Project
- * Copyright (C) 2011, 2012 Code Aurora Forum. All rights reserved.
  * Copyright (C) 2012 Sony Ericsson Mobile Communications AB.
  * Copyright (C) 2012 Sony Mobile Communications AB
  *
@@ -33,9 +32,6 @@
 
 #include "AccessibilityObject.h"
 #include "Attribute.h"
-#if ENABLE(WEB_AUDIO)
-#include "AudioDestination.h"
-#endif
 #include "BaseLayerAndroid.h"
 #include "CachedNode.h"
 #include "CachedRoot.h"
@@ -128,6 +124,7 @@
 #include "autofill/WebAutofill.h"
 #include "htmlediting.h"
 #include "markup.h"
+#include "TilesManager.h"
 
 #include <JNIHelp.h>
 #include <JNIUtility.h>
@@ -1365,7 +1362,7 @@ void WebViewCore::setSizeScreenWidthAndScale(int width, int height,
                 m_mainFrame->view()->forceLayout();
 
             // scroll to restore current screen center
-            if (node && node->inDocument()) {
+            if (node) {
                 const WebCore::IntRect& newBounds = node->getRect();
                 DBG_NAV_LOGD("nb:(x=%d,y=%d,w=%d,"
                     "h=%d)", newBounds.x(), newBounds.y(),
@@ -1909,44 +1906,6 @@ Vector<IntRect> WebViewCore::getTouchHighlightRects(int x, int y, int slop)
     return rects;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-#if ENABLE(WEB_AUDIO)
-void WebViewCore::addAudioDestination(WebCore::AudioDestination* t)
-{
-//    SkDebugf("----------- addAudioDestination %p", t);
-    *m_audioDestinations.append() = t;
-}
-
-void WebViewCore::removeAudioDestination(WebCore::AudioDestination* t)
-{
-//    SkDebugf("----------- removeAudioDestination %p", t);
-    int index = m_audioDestinations.find(t);
-    if (index < 0) {
-        SkDebugf("--------------- removeAudioDestination not found! %p\n", t);
-    } else {
-        m_audioDestinations.removeShuffle(index);
-    }
-}
-
-void WebViewCore::pauseAudioDestinations()
-{
-    WebCore::AudioDestination** iter = m_audioDestinations.begin();
-    WebCore::AudioDestination** stop = m_audioDestinations.end();
-
-    for (; iter < stop; ++iter)
-        (*iter)->pause();
-}
-
-void WebViewCore::resumeAudioDestinations()
-{
-    WebCore::AudioDestination** iter = m_audioDestinations.begin();
-    WebCore::AudioDestination** stop = m_audioDestinations.end();
-
-    for (; iter < stop; ++iter)
-        (*iter)->start();
-}
-#endif
 ///////////////////////////////////////////////////////////////////////////////
 
 void WebViewCore::addPlugin(PluginWidgetAndroid* w)
@@ -2548,7 +2507,7 @@ Node* WebViewCore::getNextAnchorNode(Node* anchorNode, bool ignoreFirstNode, int
                 || isContentInputElement(currentNode))
             return currentNode;
         if (direction == DIRECTION_FORWARD)
-            currentNode = currentNode->traverseNextNodeFastPath();
+            currentNode = currentNode->traverseNextNode();
         else
             currentNode = currentNode->traversePreviousNodePostOrder(body);
     }
@@ -2670,7 +2629,7 @@ Node* WebViewCore::getIntermediaryInputElement(Node* fromNode, Node* toNode, int
         while (currentNode && currentNode != toNode) {
             if (isContentInputElement(currentNode))
                 return currentNode;
-            currentNode = currentNode->traverseNextNodeFastPath();
+            currentNode = currentNode->traverseNextNode();
         }
     } else {
         Node* currentNode = fromNode->traversePreviousNode();
@@ -4487,6 +4446,11 @@ static void SetNewStorageLimit(JNIEnv* env, jobject obj, jlong quota) {
 #endif
 }
 
+static jint GetTextureGeneratorThreadID(JNIEnv* env, jobject obj) {
+     return TilesManager::instance()->getTextureManagerThreadID();
+}
+
+
 // Called from Java to provide a Geolocation permission state for the specified origin.
 static void GeolocationPermissionsProvide(JNIEnv* env, jobject obj, jstring origin, jboolean allow, jboolean remember) {
     WebViewCore* viewImpl = GET_NATIVE_VIEW(env, obj);
@@ -4545,9 +4509,6 @@ static void Pause(JNIEnv* env, jobject obj)
     SkANP::InitEvent(&event, kLifecycle_ANPEventType);
     event.data.lifecycle.action = kPause_ANPLifecycleAction;
     GET_NATIVE_VIEW(env, obj)->sendPluginEvent(event);
-#if ENABLE(WEB_AUDIO)
-    GET_NATIVE_VIEW(env, obj)->pauseAudioDestinations();
-#endif
 
     GET_NATIVE_VIEW(env, obj)->setIsPaused(true);
 }
@@ -4572,9 +4533,6 @@ static void Resume(JNIEnv* env, jobject obj)
     SkANP::InitEvent(&event, kLifecycle_ANPEventType);
     event.data.lifecycle.action = kResume_ANPLifecycleAction;
     GET_NATIVE_VIEW(env, obj)->sendPluginEvent(event);
-#if ENABLE(WEB_AUDIO)
-    GET_NATIVE_VIEW(env, obj)->resumeAudioDestinations();
-#endif
 
     GET_NATIVE_VIEW(env, obj)->setIsPaused(false);
 }
@@ -4794,6 +4752,8 @@ static JNINativeMethod gJavaWebViewCoreMethods[] = {
         (void*) DumpV8Counters },
     { "nativeSetNewStorageLimit", "(J)V",
         (void*) SetNewStorageLimit },
+    { "nativeGetTextureGeneratorThreadID", "()I",
+        (void*) GetTextureGeneratorThreadID },
     { "nativeGeolocationPermissionsProvide", "(Ljava/lang/String;ZZ)V",
         (void*) GeolocationPermissionsProvide },
     { "nativeSetIsPaused", "(Z)V", (void*) SetIsPaused },

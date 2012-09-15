@@ -42,6 +42,7 @@ TextureInfo::TextureInfo(SharedTextureMode mode)
     m_height = 0;
     m_internalFormat = 0;
     m_sharedTextureMode = mode;
+    m_eglSurface = EGL_NO_SURFACE;
     m_pictureCount = 0;
 }
 

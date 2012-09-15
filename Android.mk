@@ -24,9 +24,8 @@
 ##
 
 # Control WebGL compiling in webkit.
-# Default is true unless explictly disabled.
-ifneq ($(ENABLE_WEBGL),false)
-    ENABLE_WEBGL = true
+ifeq ($(ENABLE_WEBGL),true)
+LOCAL_CFLAGS += -DENABLE_WEBGL=1
 endif
 
 # Control SVG compiling in webkit.
@@ -73,14 +72,13 @@ ifneq ($(JAVASCRIPT_ENGINE),jsc)
   endif
 endif
 
-
-# Check if V8 can be supported by seeing if the device supports it  
-# through either the flag or by having VFP 
-# If it cannot then switch to jsc 
-ifneq ($(ARCH_ARM_HAVE_VFP),true) 
-  ifneq ($(TARGET_WEBKIT_USE_MORE_MEMORY),true) 
-    JAVASCRIPT_ENGINE := jsc 
-    USE_ALT_HTTP := true 
+# Check if V8 can be supported by seeing if the device supports it 
+# through either the flag or by having VFP
+# If it cannot then switch to jsc
+ifneq ($(ARCH_ARM_HAVE_VFP),true)
+  ifneq ($(TARGET_WEBKIT_USE_MORE_MEMORY),true)
+    JAVASCRIPT_ENGINE := jsc
+    USE_ALT_HTTP := true
   endif
 endif
 
@@ -117,10 +115,6 @@ ifneq ($(ENABLE_AUTOFILL),false)
 endif
 ifneq ($(HTTP_STACK),chrome)
   ENABLE_AUTOFILL = false
-endif
-
-ifneq ($(ENABLE_WEBAUDIO),false)
-  ENABLE_WEBAUDIO = true
 endif
 
 BASE_PATH := $(call my-dir)
@@ -276,17 +270,6 @@ LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES) \
 	external/chromium/chrome \
 	external/skia
 
-ifeq ($(ENABLE_WEBAUDIO),true)
-LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES) \
-	external/kissfft \
-	frameworks/base/include/media/stagefright/openmax \
-	$(WEBCORE_PATH)/platform/audio \
-	$(WEBCORE_PATH)/platform/audio/android \
-	$(WEBCORE_PATH)/webaudio \
-	$(WEBKIT_PATH)/android/webaudio \
-	$(WEBKIT_PATH)/android/neon
-endif
-
 # Needed for ANGLE
 LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES) \
 	$(SOURCE_PATH)/ThirdParty/ANGLE/include/GLSLANG
@@ -367,22 +350,21 @@ endif
 
 # need a flag to tell the C side when we're on devices with large memory
 # budgets (i.e. larger than the low-end devices that initially shipped)
-ifneq ($(TARGET_WEBKIT_USE_MORE_MEMORY),false) 
-  ifeq ($(ARCH_ARM_HAVE_VFP),true) 
-    LOCAL_CFLAGS += -DANDROID_LARGE_MEMORY_DEVICE 
-  endif 
-  ifeq ($(TARGET_WEBKIT_USE_MORE_MEMORY),true) 
-    LOCAL_CFLAGS += -DANDROID_LARGE_MEMORY_DEVICE 
-  endif 
-
-endif
-
-ifeq ($(ARCH_ARM_HAVE_NEON),true)
-LOCAL_CFLAGS += -D__USE_ARM_NEON__
+ifneq ($(TARGET_WEBKIT_USE_MORE_MEMORY),false)
+  ifeq ($(ARCH_ARM_HAVE_VFP),true)
+    LOCAL_CFLAGS += -DANDROID_LARGE_MEMORY_DEVICE
+  endif
+  ifeq ($(TARGET_WEBKIT_USE_MORE_MEMORY),true)
+    LOCAL_CFLAGS += -DANDROID_LARGE_MEMORY_DEVICE
+  endif
 endif
 
 ifeq ($(ENABLE_SVG),true)
 LOCAL_CFLAGS += -DENABLE_SVG=1 -DENABLE_SVG_ANIMATION=1
+endif
+
+ifeq ($(ENABLE_WEBGL),true)
+LOCAL_CFLAGS += -DENABLE_WEBGL=1
 endif
 
 ifeq ($(ENABLE_WTF_USE_ACCELERATED_COMPOSITING),false)
@@ -396,11 +378,6 @@ endif
 ifeq ($(WEBCORE_INSTRUMENTATION),true)
 LOCAL_CFLAGS += -DANDROID_INSTRUMENT
 endif
-
-ifeq ($(WEBVIEW_SUSPEND_VIDEOS_IN_BACKGROUND_TAB), true)
-LOCAL_CFLAGS += -DWEBVIEW_SUSPEND_VIDEOS_IN_BACKGROUND_TAB
-endif
-
 
 # LOCAL_LDLIBS is used in simulator builds only and simulator builds are only
 # valid on Linux
@@ -431,10 +408,6 @@ ifeq ($(WEBCORE_INSTRUMENTATION),true)
 LOCAL_SHARED_LIBRARIES += libhardware_legacy
 endif
 
-ifeq ($(ENABLE_WEBAUDIO),true)
-LOCAL_SHARED_LIBRARIES += libstagefright
-endif
-
 # We have to use the android version of libdl
 LOCAL_SHARED_LIBRARIES += libdl libstlport
 # We have to fake out some headers when using stlport.
@@ -453,15 +426,6 @@ endif
 
 # Build the list of static libraries
 LOCAL_STATIC_LIBRARIES := libxml2 libxslt libhyphenation libskiagpu libpng
-
-# WebAudio
-ifeq ($(ENABLE_WEBAUDIO),true)
-    LOCAL_STATIC_LIBRARIES += libkissfft
-    ifeq ($(ARCH_ARM_HAVE_NEON),true)
-        LOCAL_STATIC_LIBRARIES += libvmathneon
-    endif
-endif
-
 ifeq ($(JAVASCRIPT_ENGINE),v8)
 ifeq ($(DYNAMIC_SHARED_LIBV8SO),true)
 LOCAL_SHARED_LIBRARIES += libv8
@@ -534,7 +498,7 @@ LOCAL_SRC_FILES := $(addprefix Source/ThirdParty/ANGLE/src/compiler/,$(LOCAL_SRC
 LOCAL_C_INCLUDES := $(WEBKIT_C_INCLUDES) \
 	$(ANGLE_PATH)/include \
 	$(ANGLE_PATH)/src
-LOCAL_CFLAGS += -Wno-error=non-virtual-dtor -fno-strict-aliasing
+LOCAL_CFLAGS += -Wno-error=non-virtual-dtor
 # Build libangle
 include $(BUILD_STATIC_LIBRARY)
 
@@ -585,13 +549,6 @@ include $(WEBKIT_PATH)/android/wds/client/Android.mk
 
 # Build the performance command line tool.
 include $(WEBKIT_PATH)/android/benchmark/Android.mk
-
-ifeq ($(ENABLE_WEBAUDIO),true)
-ifeq ($(ARCH_ARM_HAVE_NEON),true)
-# Build the VectorMath NEON routines
-include $(WEBKIT_PATH)/android/neon/Android.mk
-endif
-endif
 
 # Build the webkit merge tool.
 include $(BASE_PATH)/Tools/android/webkitmerge/Android.mk

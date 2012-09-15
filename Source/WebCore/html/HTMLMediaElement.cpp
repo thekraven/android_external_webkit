@@ -84,11 +84,6 @@
 #define TOUCH_DELAY 4
 #endif
 
-#if ENABLE(WEB_AUDIO)
-#include "AudioSourceProvider.h"
-#include "MediaElementAudioSourceNode.h"
-#endif
-
 using namespace std;
 
 namespace WebCore {
@@ -183,9 +178,6 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document* docum
     , m_completelyLoaded(false)
 #if PLATFORM(ANDROID)
     , m_lastTouch(0)
-#endif
-#if ENABLE(WEB_AUDIO)
-    , m_audioSourceNode(0)
 #endif
 {
     LOG(Media, "HTMLMediaElement::HTMLMediaElement");
@@ -732,9 +724,6 @@ void HTMLMediaElement::loadResource(const KURL& initialURL, ContentType& content
     if (!autoplay())
         m_player->setPreload(m_preload);
     m_player->setPreservesPitch(m_webkitPreservesPitch);
-
-    if (hasAttribute(mutedAttr))
-        m_muted = true;
     updateVolume();
 
 #if PLATFORM(ANDROID)
@@ -1648,12 +1637,9 @@ void HTMLMediaElement::playbackProgressTimerFired(Timer<HTMLMediaElement>*)
 #if PLATFORM(ANDROID)
         m_mouseOver = WTF::currentTime() - m_lastTouch <= TOUCH_DELAY;
 #endif
-        // Only update media control buffer when it is Opaque
         if (!m_mouseOver && controls() && hasVideo())
             mediaControls()->makeTransparent();
-#if PLATFORM(ANDROID)
-        else
-#endif
+
         mediaControls()->playbackProgressed();
     }
     // FIXME: deal with cue ranges here
@@ -1920,11 +1906,7 @@ void HTMLMediaElement::mediaPlayerTimeChanged(MediaPlayer*)
     else
         m_sentEndEvent = false;
 
-    // Avoid do media control update(start/stop) when timeupdate message from
-    // java side on Android platform.
-#if !PLATFORM(ANDROID)
     updatePlayState();
-#endif
     endProcessingMediaPlayerCallback();
 }
 
@@ -2750,23 +2732,6 @@ void* HTMLMediaElement::preDispatchEventHandler(Event* event)
     return 0;
 }
 
-#if ENABLE(WEB_AUDIO)
-void HTMLMediaElement::setAudioSourceNode(MediaElementAudioSourceNode* sourceNode)
-{
-    m_audioSourceNode = sourceNode;
-
-    if (audioSourceProvider())
-        audioSourceProvider()->setClient(m_audioSourceNode);
-}
-
-AudioSourceProvider* HTMLMediaElement::audioSourceProvider()
-{
-    if (m_player)
-        return m_player->audioSourceProvider();
-
-    return 0;
-}
-#endif
 
 }
 

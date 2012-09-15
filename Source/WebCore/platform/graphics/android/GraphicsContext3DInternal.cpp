@@ -53,10 +53,9 @@
 #if ENABLE(WEBGL)
 namespace WebCore {
 
-#define OLD_GRAPHICBUFFER_ALLOC
 class FBO {
 public:
-    static FBO* createFBO(EGLDisplay dpy, int width, int height, GraphicsContext3D::Attributes attrs);
+    static FBO* createFBO(EGLDisplay dpy, int width, int height);
     ~FBO();
 
     EGLSyncKHR sync() { return m_sync; }
@@ -81,15 +80,13 @@ public:
 
 private:
     FBO(EGLDisplay dpy);
-    bool init(int width, int height, GraphicsContext3D::Attributes attrs);
-
+    bool init(int width, int height);
     GLuint createTexture(EGLImageKHR image, int width, int height);
 
     EGLDisplay  m_dpy;
     GLuint      m_texture;
     GLuint      m_fbo;
     GLuint      m_depthBuffer;
-    GLuint      m_stencilBuffer;
     EGLImageKHR m_image;
     EGLSyncKHR  m_sync;
     sp<IGraphicBufferAlloc> m_graphicBufferAlloc;
@@ -264,7 +261,7 @@ bool GraphicsContext3DInternal::initEGL()
     s = eglQueryString(m_dpy, EGL_CLIENT_APIS);
     LOGWEBGL("EGL_CLIENT_APIS = %s", s);
 
-    EGLint config_attribs[21];
+    EGLint* config_attribs = new EGLint[21];
     int p = 0;
     config_attribs[p++] = EGL_BLUE_SIZE;
     config_attribs[p++] = 8;
@@ -286,8 +283,12 @@ bool GraphicsContext3DInternal::initEGL()
         config_attribs[p++] = EGL_STENCIL_SIZE;
         config_attribs[p++] = 8;
     }
-    // Antialiasing currently is not supported.
-    m_attrs.antialias = false;
+    if (m_attrs.antialias) {
+        config_attribs[p++] = EGL_SAMPLE_BUFFERS;
+        config_attribs[p++] = 1;
+        config_attribs[p++] = EGL_SAMPLES;
+        config_attribs[p++] = 4;
+    }
     config_attribs[p] = EGL_NONE;
 
     EGLint num_configs = 0;
@@ -316,7 +317,7 @@ bool GraphicsContext3DInternal::createContext(bool createEGLContext)
 
     makeContextCurrent();
     for (int i = 0; i < NUM_BUFFERS; i++) {
-        FBO* tmp = FBO::createFBO(m_dpy, m_width > 0 ? m_width : 1, m_height > 0 ? m_height : 1, m_attrs);
+        FBO* tmp = FBO::createFBO(m_dpy, m_width > 0 ? m_width : 1, m_height > 0 ? m_height : 1);
         if (tmp == 0) {
             LOGWEBGL("Failed to create FBO");
             deleteContext(createEGLContext);
@@ -396,12 +397,12 @@ void GraphicsContext3DInternal::synthesizeGLError(unsigned long error)
     m_syntheticErrors.add(error);
 }
 
-FBO* FBO::createFBO(EGLDisplay dpy, int width, int height, GraphicsContext3D::Attributes attributes)
+FBO* FBO::createFBO(EGLDisplay dpy, int width, int height)
 {
     LOGWEBGL("createFBO()");
     FBO* fbo = new FBO(dpy);
 
-    if (!fbo->init(width, height, attributes)) {
+    if (!fbo->init(width, height)) {
         delete fbo;
         return 0;
     }
@@ -420,26 +421,20 @@ FBO::FBO(EGLDisplay dpy)
 {
 }
 
-bool FBO::init(int width, int height, GraphicsContext3D::Attributes attributes)
+bool FBO::init(int width, int height)
 {
     // 1. Allocate a graphic buffer
     sp<ISurfaceComposer> composer(ComposerService::getComposerService());
     m_graphicBufferAlloc = composer->createGraphicBufferAlloc();
 
     status_t error;
-
-    PixelFormat format = attributes.alpha ? HAL_PIXEL_FORMAT_RGBA_8888 : HAL_PIXEL_FORMAT_RGBX_8888;
-
-    m_grBuffer = m_graphicBufferAlloc->createGraphicBuffer(width, height, format,
+    m_grBuffer = m_graphicBufferAlloc->createGraphicBuffer(width, height,
+                                                           HAL_PIXEL_FORMAT_RGBA_8888,
                                                            GRALLOC_USAGE_HW_TEXTURE, &error);
     if (error != NO_ERROR) {
         LOGWEBGL(" failed to allocate GraphicBuffer, error = %d", error);
         return false;
     }
-
-#ifndef OLD_GRAPHICBUFFER_ALLOC
-    m_graphicBufferAlloc = 0;
-#endif
 
     void *addr = 0;
     if (m_grBuffer->lock(GRALLOC_USAGE_SW_WRITE_RARELY, &addr) != NO_ERROR) {
@@ -461,7 +456,6 @@ bool FBO::init(int width, int height, GraphicsContext3D::Attributes attributes)
         EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
         EGL_NONE,                EGL_NONE
     };
-
     m_image = eglCreateImageKHR(m_dpy,
                                 EGL_NO_CONTEXT,
                                 EGL_NATIVE_BUFFER_ANDROID,
@@ -481,40 +475,23 @@ bool FBO::init(int width, int height, GraphicsContext3D::Attributes attributes)
 
     // 4. Create the Framebuffer Object from the texture
     glGenFramebuffers(1, &m_fbo);
+    glGenRenderbuffers(1, &m_depthBuffer);
 
-    if (attributes.depth) {
-        glGenRenderbuffers(1, &m_depthBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
-        if (GraphicsContext3DInternal::checkGLError("glRenderbufferStorage") != GL_NO_ERROR)
-            return false;
+    glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
+    if (GraphicsContext3DInternal::checkGLError("glRenderbufferStorage") != GL_NO_ERROR) {
+        return false;
     }
-
-    if (attributes.stencil) {
-        glGenRenderbuffers(1, &m_stencilBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, m_stencilBuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, width, height);
-        if (GraphicsContext3DInternal::checkGLError("glRenderbufferStorage") != GL_NO_ERROR)
-            return false;
-    }
-
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture, 0);
-    if (GraphicsContext3DInternal::checkGLError("glFramebufferTexture2D") != GL_NO_ERROR)
+    if (GraphicsContext3DInternal::checkGLError("glFramebufferTexture2D") != GL_NO_ERROR) {
         return false;
-
-    if (attributes.depth) {
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
-        if (GraphicsContext3DInternal::checkGLError("glFramebufferRenderbuffer") != GL_NO_ERROR)
-            return false;
     }
-
-    if (attributes.stencil) {
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_stencilBuffer);
-        if (GraphicsContext3DInternal::checkGLError("glFramebufferRenderbuffer") != GL_NO_ERROR)
-            return false;
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
+    if (GraphicsContext3DInternal::checkGLError("glFramebufferRenderbuffer") != GL_NO_ERROR) {
+        return false;
     }
 
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -522,7 +499,6 @@ bool FBO::init(int width, int height, GraphicsContext3D::Attributes attributes)
         LOGWEBGL("Framebuffer incomplete: %d", status);
         return false;
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
@@ -535,16 +511,10 @@ FBO::~FBO()
         eglDestroyImageKHR(m_dpy, m_image);
         GraphicsContext3DInternal::checkEGLError("eglDestroyImageKHR");
     }
-#ifdef OLD_GRAPHICBUFFER_ALLOC
-    if (m_graphicBufferAlloc != 0)
-        m_graphicBufferAlloc->freeAllGraphicBuffersExcept(-1);
-#endif
     if (m_texture)
         glDeleteTextures(1, &m_texture);
     if (m_depthBuffer)
         glDeleteRenderbuffers(1, &m_depthBuffer);
-    if (m_stencilBuffer)
-        glDeleteRenderbuffers(1, &m_stencilBuffer);
     if (m_fbo)
         glDeleteFramebuffers(1, &m_fbo);
 }

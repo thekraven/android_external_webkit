@@ -258,6 +258,28 @@ String RenderThemeAndroid::extraMediaControlsStyleSheet()
       return String(mediaControlsAndroidUserAgentStyleSheet, sizeof(mediaControlsAndroidUserAgentStyleSheet));
 }
 
+bool RenderThemeAndroid::shouldRenderMediaControlPart(ControlPart part, Element* e)
+{
+      HTMLMediaElement* mediaElement = static_cast<HTMLMediaElement*>(e);
+      switch (part) {
+      case MediaMuteButtonPart:
+          return false;
+      case MediaSeekBackButtonPart:
+      case MediaSeekForwardButtonPart:
+          return false;
+      case MediaRewindButtonPart:
+          return mediaElement->movieLoadType() != MediaPlayer::LiveStream;
+      case MediaReturnToRealtimeButtonPart:
+          return mediaElement->movieLoadType() == MediaPlayer::LiveStream;
+      case MediaFullscreenButtonPart:
+          return mediaElement->supportsFullscreen();
+      case MediaToggleClosedCaptionsButtonPart:
+          return mediaElement->hasClosedCaptions();
+      default:
+          return true;
+      }
+}
+
 bool RenderThemeAndroid::paintMediaFullscreenButton(RenderObject* o, const PaintInfo& paintInfo, const IntRect& rect)
 {
       bool translucent = false;
@@ -272,14 +294,8 @@ bool RenderThemeAndroid::paintMediaMuteButton(RenderObject* o, const PaintInfo& 
       bool translucent = false;
       if (o && toParentMediaElement(o) && toParentMediaElement(o)->hasTagName(HTMLNames::videoTag))
           translucent = true;
-      if (MediaControlMuteButtonElement* btn = static_cast<MediaControlMuteButtonElement*>(o->node())) {
-          if (btn->displayType() == MediaMuteButton)
-              RenderSkinMediaButton::Draw(getCanvasFromInfo(paintInfo), rect, RenderSkinMediaButton::MUTE, translucent);
-          else
-              RenderSkinMediaButton::Draw(getCanvasFromInfo(paintInfo), rect, RenderSkinMediaButton::UNMUTE, translucent);
-          return false;
-      }
-      return true;
+      RenderSkinMediaButton::Draw(getCanvasFromInfo(paintInfo), rect, RenderSkinMediaButton::MUTE, translucent);
+      return false;
 }
 
 bool RenderThemeAndroid::paintMediaPlayButton(RenderObject* o, const PaintInfo& paintInfo, const IntRect& rect)

@@ -39,14 +39,12 @@ using namespace android;
 
 class BaseLayerAndroid;
 class LayerAndroid;
-class TilesManager;
 
 class TexturesGenerator : public Thread {
 public:
-    TexturesGenerator(TilesManager* instance) : Thread(false)
+    TexturesGenerator() : Thread(false)
         , m_waitForCompletion(false)
-        , m_currentOperation(0)
-        , m_tilesManager(instance) { }
+        , m_currentOperation(0) { }
     virtual ~TexturesGenerator() { }
     virtual status_t readyToRun();
 
@@ -56,6 +54,7 @@ public:
     void removeOperationsForFilter(OperationFilter* filter, bool waitForRunning);
 
     void scheduleOperation(QueuedOperation* operation);
+    int m_threadID;
 
 private:
     QueuedOperation* popNext();
@@ -65,7 +64,6 @@ private:
     android::Condition mRequestedOperationsCond;
     bool m_waitForCompletion;
     QueuedOperation* m_currentOperation;
-    TilesManager* m_tilesManager;
 };
 
 } // namespace WebCore

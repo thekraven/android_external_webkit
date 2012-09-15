@@ -83,22 +83,19 @@ struct FieldIds {
                 "Ljava/lang/String;");
         mDefaultTextEncoding = env->GetFieldID(clazz, "mDefaultTextEncoding",
                 "Ljava/lang/String;");
-        mGetUserAgentString = env->GetMethodID(clazz, "getUserAgentString",
-                "()Ljava/lang/String;");
-        mGetAcceptLanguage = env->GetMethodID(clazz, "getAcceptLanguage", "()Ljava/lang/String;");
+        mUserAgent = env->GetFieldID(clazz, "mUserAgent",
+                "Ljava/lang/String;");
+        mAcceptLanguage = env->GetFieldID(clazz, "mAcceptLanguage", "Ljava/lang/String;");
         mMinimumFontSize = env->GetFieldID(clazz, "mMinimumFontSize", "I");
         mMinimumLogicalFontSize = env->GetFieldID(clazz, "mMinimumLogicalFontSize", "I");
         mDefaultFontSize = env->GetFieldID(clazz, "mDefaultFontSize", "I");
         mDefaultFixedFontSize = env->GetFieldID(clazz, "mDefaultFixedFontSize", "I");
         mLoadsImagesAutomatically = env->GetFieldID(clazz, "mLoadsImagesAutomatically", "Z");
-        mMediaPreloadEnabled = env->GetFieldID(clazz, "mMediaPreloadEnabled", "Z");
 #ifdef ANDROID_BLOCK_NETWORK_IMAGE
         mBlockNetworkImage = env->GetFieldID(clazz, "mBlockNetworkImage", "Z");
 #endif
         mBlockNetworkLoads = env->GetFieldID(clazz, "mBlockNetworkLoads", "Z");
         mJavaScriptEnabled = env->GetFieldID(clazz, "mJavaScriptEnabled", "Z");
-        mAllowUniversalAccessFromFileURLs = env->GetFieldID(clazz, "mAllowUniversalAccessFromFileURLs", "Z");
-        mAllowFileAccessFromFileURLs = env->GetFieldID(clazz, "mAllowFileAccessFromFileURLs", "Z");
         mPluginState = env->GetFieldID(clazz, "mPluginState",
                 "Landroid/webkit/WebSettings$PluginState;");
 #if ENABLE(DATABASE)
@@ -163,23 +160,18 @@ struct FieldIds {
         LOG_ASSERT(mCursiveFontFamily, "Could not find field mCursiveFontFamily");
         LOG_ASSERT(mFantasyFontFamily, "Could not find field mFantasyFontFamily");
         LOG_ASSERT(mDefaultTextEncoding, "Could not find field mDefaultTextEncoding");
-        LOG_ASSERT(mGetUserAgentString, "Could not find method getUserAgentString");
-        LOG_ASSERT(mGetAcceptLanguage, "Could not find method getAcceptLanguage");
+        LOG_ASSERT(mUserAgent, "Could not find field mUserAgent");
+        LOG_ASSERT(mAcceptLanguage, "Could not find field mAcceptLanguage");
         LOG_ASSERT(mMinimumFontSize, "Could not find field mMinimumFontSize");
         LOG_ASSERT(mMinimumLogicalFontSize, "Could not find field mMinimumLogicalFontSize");
         LOG_ASSERT(mDefaultFontSize, "Could not find field mDefaultFontSize");
         LOG_ASSERT(mDefaultFixedFontSize, "Could not find field mDefaultFixedFontSize");
         LOG_ASSERT(mLoadsImagesAutomatically, "Could not find field mLoadsImagesAutomatically");
-        LOG_ASSERT(mMediaPreloadEnabled, "Could not find field mMediaPreloadEnabled");
 #ifdef ANDROID_BLOCK_NETWORK_IMAGE
         LOG_ASSERT(mBlockNetworkImage, "Could not find field mBlockNetworkImage");
 #endif
         LOG_ASSERT(mBlockNetworkLoads, "Could not find field mBlockNetworkLoads");
         LOG_ASSERT(mJavaScriptEnabled, "Could not find field mJavaScriptEnabled");
-        LOG_ASSERT(mAllowUniversalAccessFromFileURLs,
-                    "Could not find field mAllowUniversalAccessFromFileURLs");
-        LOG_ASSERT(mAllowFileAccessFromFileURLs,
-                    "Could not find field mAllowFileAccessFromFileURLs");
         LOG_ASSERT(mPluginState, "Could not find field mPluginState");
 #if ENABLE(OFFLINE_WEB_APPLICATIONS)
         LOG_ASSERT(mAppCacheEnabled, "Could not find field mAppCacheEnabled");
@@ -215,21 +207,18 @@ struct FieldIds {
     jfieldID mCursiveFontFamily;
     jfieldID mFantasyFontFamily;
     jfieldID mDefaultTextEncoding;
-    jmethodID mGetUserAgentString;
-    jmethodID mGetAcceptLanguage;
+    jfieldID mUserAgent;
+    jfieldID mAcceptLanguage;
     jfieldID mMinimumFontSize;
     jfieldID mMinimumLogicalFontSize;
     jfieldID mDefaultFontSize;
     jfieldID mDefaultFixedFontSize;
     jfieldID mLoadsImagesAutomatically;
-    jfieldID mMediaPreloadEnabled;
 #ifdef ANDROID_BLOCK_NETWORK_IMAGE
     jfieldID mBlockNetworkImage;
 #endif
     jfieldID mBlockNetworkLoads;
     jfieldID mJavaScriptEnabled;
-    jfieldID mAllowUniversalAccessFromFileURLs;
-    jfieldID mAllowFileAccessFromFileURLs;
     jfieldID mPluginState;
 #if ENABLE(OFFLINE_WEB_APPLICATIONS)
     jfieldID mAppCacheEnabled;
@@ -379,7 +368,7 @@ public:
         str = (jstring)env->GetObjectField(obj, gFieldIds->mDefaultTextEncoding);
         s->setDefaultTextEncodingName(jstringToWtfString(env, str));
 
-        str = (jstring)env->CallObjectMethod(obj, gFieldIds->mGetUserAgentString);
+        str = (jstring)env->GetObjectField(obj, gFieldIds->mUserAgent);
         WebFrame::getWebFrame(pFrame)->setUserAgent(jstringToWtfString(env, str));
 #if USE(CHROME_NETWORK_STACK)
         WebViewCore::getWebViewCore(pFrame->view())->setWebRequestContextUserAgent();
@@ -387,7 +376,7 @@ public:
         jint cacheMode = env->GetIntField(obj, gFieldIds->mOverrideCacheMode);
         WebViewCore::getWebViewCore(pFrame->view())->setWebRequestContextCacheMode(cacheMode);
 
-        str = (jstring)env->CallObjectMethod(obj, gFieldIds->mGetAcceptLanguage);
+        str = (jstring)env->GetObjectField(obj, gFieldIds->mAcceptLanguage);
         WebRequestContext::setAcceptLanguage(jstringToWtfString(env, str));
 #endif
 
@@ -408,9 +397,6 @@ public:
         if (flag)
             cachedResourceLoader->setAutoLoadImages(true);
 
-        flag = env->GetBooleanField(obj, gFieldIds->mMediaPreloadEnabled);
-        s->setMediaPreloadEnabled(flag);
-
 #ifdef ANDROID_BLOCK_NETWORK_IMAGE
         flag = env->GetBooleanField(obj, gFieldIds->mBlockNetworkImage);
         s->setBlockNetworkImage(flag);
@@ -423,12 +409,6 @@ public:
 
         flag = env->GetBooleanField(obj, gFieldIds->mJavaScriptEnabled);
         s->setJavaScriptEnabled(flag);
-
-        flag = env->GetBooleanField(obj, gFieldIds->mAllowUniversalAccessFromFileURLs);
-        s->setAllowUniversalAccessFromFileURLs(flag);
-
-        flag = env->GetBooleanField(obj, gFieldIds->mAllowFileAccessFromFileURLs);
-        s->setAllowFileAccessFromFileURLs(flag);
 
         // ON = 0
         // ON_DEMAND = 1

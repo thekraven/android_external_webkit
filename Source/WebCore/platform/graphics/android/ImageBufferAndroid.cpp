@@ -36,7 +36,6 @@
 #include "SkBitmapRef.h"
 #include "SkCanvas.h"
 #include "SkColorPriv.h"
-#include "SkData.h"
 #include "SkDevice.h"
 #include "SkImageEncoder.h"
 #include "SkStream.h"
@@ -242,9 +241,7 @@ String ImageBuffer::toDataURL(const String&, const double*) const
 
     // Convert it into base64.
     Vector<char> pngEncodedData;
-    SkData* streamData = pngStream.copyToData();
-    pngEncodedData.append((char*)streamData->data(), streamData->size());
-    streamData->unref();
+    pngEncodedData.append(pngStream.getStream(), pngStream.getOffset());
     Vector<char> base64EncodedData;
     base64Encode(pngEncodedData, base64EncodedData);
     // Append with a \0 so that it's a valid string.

@@ -503,7 +503,7 @@ bool drawGL(WebCore::IntRect& viewRect, WebCore::IntRect* invalRect,
     // Make sure we have valid coordinates. We might not have valid coords
     // if the zoom manager is still initializing. We will be redrawn
     // once the correct scale is set
-    if (!m_visibleRect.isFinite())
+    if (!m_visibleRect.hasValidCoordinates())
         return false;
     bool treesSwapped = false;
     bool newTreeHasAnim = false;
@@ -2726,16 +2726,6 @@ static void nativeSetPauseDrawing(JNIEnv *env, jobject obj, jint nativeView,
     ((WebView*)nativeView)->m_isDrawingPaused = pause;
 }
 
-static bool nativeShouldSuspendVideosInBackgroundTab(JNIEnv*, jobject ob)
-{
-#ifdef WEBVIEW_SUSPEND_VIDEOS_IN_BACKGROUND_TAB
-    return true;
-#else
-    return false;
-#endif
-
-}
-
 /*
  * JNI registration
  */
@@ -2952,8 +2942,6 @@ static JNINativeMethod gJavaWebViewMethods[] = {
         (void*) nativeOnTrimMemory },
     { "nativeSetPauseDrawing", "(IZ)V",
         (void*) nativeSetPauseDrawing },
-    { "nativeShouldSuspendVideosInBackgroundTab", "()Z",
-        (void*) nativeShouldSuspendVideosInBackgroundTab},
 };
 
 int registerWebView(JNIEnv* env)

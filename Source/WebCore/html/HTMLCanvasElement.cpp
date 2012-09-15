@@ -98,12 +98,6 @@ HTMLCanvasElement::HTMLCanvasElement(const QualifiedName& tagName, Document* doc
     , m_hasCreatedImageBuffer(false)
 {
     ASSERT(hasTagName(canvasTag));
-
-#if ENABLE(DASHBOARD_SUPPORT)
-    Settings* settings = document()->settings();
-    if (settings && settings->usesDashboardBackwardCompatibilityMode())
-        setIeForbidsInsertHTML();
-#endif
 }
 
 PassRefPtr<HTMLCanvasElement> HTMLCanvasElement::create(Document* document)

@@ -53,8 +53,7 @@ static const PatchData gFiles[] =
         { "scrubber_primary_holo.9.png", 0, 0 }, // SLIDER_TRACK, left of the SLIDER_THUMB
         { "ic_media_pause.png", 0, 0}, // PAUSE
         { "ic_media_play.png", 0, 0 }, // PLAY
-        { "ic_audio_vol.png", 0, 0 }, // MUTE
-        { "ic_audio_vol_mute.png", 0, 0 }, // UNMUTE
+        { "ic_media_pause.png", 0, 0 }, // MUTE
         { "ic_media_rew.png", 0, 0 }, // REWIND
         { "ic_media_ff.png", 0, 0 }, // FORWARD
         { "ic_media_fullscreen.png", 0, 0 }, // FULLSCREEN
@@ -125,7 +124,6 @@ void RenderSkinMediaButton::Draw(SkCanvas* canvas, const IntRect& r, int buttonT
     case PAUSE:
     case PLAY:
     case MUTE:
-    case UNMUTE:
     case REWIND:
     case FORWARD:
     case FULLSCREEN:

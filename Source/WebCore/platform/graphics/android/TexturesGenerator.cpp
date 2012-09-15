@@ -27,7 +27,7 @@
 #include "TexturesGenerator.h"
 
 #if USE(ACCELERATED_COMPOSITING)
-
+#include "sys/types.h"
 #include "BaseLayerAndroid.h"
 #include "GLUtils.h"
 #include "PaintTileOperation.h"
@@ -104,7 +104,7 @@ void TexturesGenerator::removeOperationsForFilter(OperationFilter* filter, bool 
             // The solution is use this as a flag to tell Tex Gen thread that
             // UI thread is waiting now, Tex Gen thread should not wait for the
             // queue any more.
-            m_tilesManager->transferQueue()->interruptTransferQueue(true);
+            TilesManager::instance()->transferQueue()->interruptTransferQueue(true);
         }
 
         delete filter;
@@ -122,6 +122,7 @@ void TexturesGenerator::removeOperationsForFilter(OperationFilter* filter, bool 
 
 status_t TexturesGenerator::readyToRun()
 {
+    TilesManager::instance()->markGeneratorAsReady();
     XLOG("Thread ready to run");
     return NO_ERROR;
 }
@@ -161,6 +162,7 @@ QueuedOperation* TexturesGenerator::popNext()
 
 bool TexturesGenerator::threadLoop()
 {
+    m_threadID = gettid();
     // Check if we have any pending operations.
     mRequestedOperationsLock.lock();
     while (!mRequestedOperations.size())
@@ -191,7 +193,7 @@ bool TexturesGenerator::threadLoop()
             stop = true;
         if (m_waitForCompletion) {
             m_waitForCompletion = false;
-            m_tilesManager->transferQueue()->interruptTransferQueue(false);
+            TilesManager::instance()->transferQueue()->interruptTransferQueue(false);
             mRequestedOperationsCond.signal();
         }
         mRequestedOperationsLock.unlock();

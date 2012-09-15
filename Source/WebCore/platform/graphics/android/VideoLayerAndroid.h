@@ -44,13 +44,7 @@ namespace WebCore {
 // Otherwise will draw a static image.
 // NOTE: These values are matching the ones in HTML5VideoView.java
 // Please keep them in sync when changed here.
-typedef enum {INITIALIZED, PREPARING, PREPARED, PLAYING, BUFFERING, RELEASED } PlayerState;
-
-class VideoLayerObserverInterface : public SkRefCnt {
-public:
-    virtual ~VideoLayerObserverInterface() { }
-    virtual void notifyRectChange(const FloatRect&) = 0;
-};
+typedef enum {INITIALIZED, PREPARING, PREPARED, PLAYING, RELEASED} PlayerState;
 
 class VideoLayerAndroid : public LayerAndroid {
 
@@ -58,24 +52,20 @@ public:
     VideoLayerAndroid();
     explicit VideoLayerAndroid(const VideoLayerAndroid& layer);
 
-    virtual ~VideoLayerAndroid();
-
     virtual bool isVideo() const { return true; }
     virtual LayerAndroid* copy() const { return new VideoLayerAndroid(*this); }
 
     // The following 3 functions are called in UI thread only.
     virtual bool drawGL();
     void setSurfaceTexture(sp<SurfaceTexture> texture, int textureName, PlayerState playerState);
-    void registerVideoLayerObserver(VideoLayerObserverInterface* observer);
     GLuint createBackgroundTexture();
     GLuint createSpinnerOuterTexture();
     GLuint createSpinnerInnerTexture();
     GLuint createPosterTexture();
-    void setPlayerState(PlayerState state);
 
 private:
     GLuint createTextureFromImage(int buttonType);
-    void showProgressSpinner(SkRect& innerRect);
+    void init();
     // Surface texture for showing the video is actually allocated in Java side
     // and passed into this native code.
     sp<android::SurfaceTexture> m_surfaceTexture;
@@ -94,8 +84,6 @@ private:
     static const int ROTATESTEP = 12;
     static const int IMAGESIZE = 64;
     static const IntRect buttonRect;
-
-    VideoLayerObserverInterface* m_observer;
 };
 
 } // namespace WebCore

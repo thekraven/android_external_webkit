@@ -6936,9 +6936,8 @@ float CSSStyleSelector::getComputedSizeFromSpecifiedSize(Document* document, Ren
     float zoomFactor = 1.0f;
     if (!useSVGZoomRules) {
         zoomFactor = style->effectiveZoom();
-        if (!isAbsoluteSize)
-            if (Frame* frame = document->frame())
-                zoomFactor *= frame->textZoomFactor();
+        if (Frame* frame = document->frame())
+            zoomFactor *= frame->textZoomFactor();
     }
 
     // We support two types of minimum font size.  The first is a hard override that applies to
@@ -7161,7 +7160,7 @@ void CSSStyleSelector::SelectorChecker::allVisitedStateChanged()
 {
     if (m_linksCheckedForVisitedState.isEmpty())
         return;
-    for (Node* node = m_document; node; node = node->traverseNextNodeFastPath()) {
+    for (Node* node = m_document; node; node = node->traverseNextNode()) {
         if (node->isLink())
             node->setNeedsStyleRecalc();
     }
@@ -7171,7 +7170,7 @@ void CSSStyleSelector::SelectorChecker::visitedStateChanged(LinkHash visitedHash
 {
     if (!m_linksCheckedForVisitedState.contains(visitedHash))
         return;
-    for (Node* node = m_document; node; node = node->traverseNextNodeFastPath()) {
+    for (Node* node = m_document; node; node = node->traverseNextNode()) {
         const AtomicString* attr = linkAttribute(node);
         if (attr && visitedLinkHash(m_document->baseURL(), *attr) == visitedHash)
             node->setNeedsStyleRecalc();

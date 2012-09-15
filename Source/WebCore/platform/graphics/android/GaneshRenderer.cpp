@@ -117,6 +117,7 @@ void GaneshRenderer::setupCanvas(const TileRenderInfo& renderInfo, SkCanvas* can
 
     // set the GPU device to the canvas
     canvas->setDevice(device);
+    canvas->setDeviceFactory(device->getDeviceFactory());
 
     // invert canvas contents
     if (renderInfo.textureInfo->getSharedTextureMode() == EglImageMode) {
