@@ -1,7 +1,5 @@
 /*
  * Copyright 2006, The Android Open Source Project
- * Copyright (C) 2012 Sony Ericsson Mobile Communications AB.
- * Copyright (C) 2012 Sony Mobile Communications AB
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -124,7 +122,6 @@
 #include "autofill/WebAutofill.h"
 #include "htmlediting.h"
 #include "markup.h"
-#include "TilesManager.h"
 
 #include <JNIHelp.h>
 #include <JNIUtility.h>
@@ -1362,7 +1359,7 @@ void WebViewCore::setSizeScreenWidthAndScale(int width, int height,
                 m_mainFrame->view()->forceLayout();
 
             // scroll to restore current screen center
-            if (node) {
+            if (node && node->inDocument()) {
                 const WebCore::IntRect& newBounds = node->getRect();
                 DBG_NAV_LOGD("nb:(x=%d,y=%d,w=%d,"
                     "h=%d)", newBounds.x(), newBounds.y(),
@@ -4446,11 +4443,6 @@ static void SetNewStorageLimit(JNIEnv* env, jobject obj, jlong quota) {
 #endif
 }
 
-static jint GetTextureGeneratorThreadID(JNIEnv* env, jobject obj) {
-     return TilesManager::instance()->getTextureManagerThreadID();
-}
-
-
 // Called from Java to provide a Geolocation permission state for the specified origin.
 static void GeolocationPermissionsProvide(JNIEnv* env, jobject obj, jstring origin, jboolean allow, jboolean remember) {
     WebViewCore* viewImpl = GET_NATIVE_VIEW(env, obj);
@@ -4496,11 +4488,6 @@ static void Pause(JNIEnv* env, jobject obj)
         Geolocation* geolocation = frame->domWindow()->navigator()->optionalGeolocation();
         if (geolocation)
             geolocation->suspend();
-#if ENABLE(WEBGL)
-        Document* document = frame->document();
-        if (document)
-            document->suspendDocument();
-#endif
     }
 
     GET_NATIVE_VIEW(env, obj)->deviceMotionAndOrientationManager()->maybeSuspendClients();
@@ -4520,11 +4507,6 @@ static void Resume(JNIEnv* env, jobject obj)
         Geolocation* geolocation = frame->domWindow()->navigator()->optionalGeolocation();
         if (geolocation)
             geolocation->resume();
-#if ENABLE(WEBGL)
-        Document* document = frame->document();
-        if (document)
-            document->resumeDocument();
-#endif
     }
 
     GET_NATIVE_VIEW(env, obj)->deviceMotionAndOrientationManager()->maybeResumeClients();
@@ -4752,8 +4734,6 @@ static JNINativeMethod gJavaWebViewCoreMethods[] = {
         (void*) DumpV8Counters },
     { "nativeSetNewStorageLimit", "(J)V",
         (void*) SetNewStorageLimit },
-    { "nativeGetTextureGeneratorThreadID", "()I",
-        (void*) GetTextureGeneratorThreadID },
     { "nativeGeolocationPermissionsProvide", "(Ljava/lang/String;ZZ)V",
         (void*) GeolocationPermissionsProvide },
     { "nativeSetIsPaused", "(Z)V", (void*) SetIsPaused },

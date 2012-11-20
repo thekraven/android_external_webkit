@@ -1,7 +1,5 @@
 ##
 ## Copyright 2009, The Android Open Source Project
-## Copyright (C) 2011, Sony Ericsson Mobile Communications AB
-## Copyright (C) 2012 Sony Mobile Communications AB
 ##
 ## Redistribution and use in source and binary forms, with or without
 ## modification, are permitted provided that the following conditions
@@ -27,15 +25,9 @@
 
 LOCAL_CFLAGS += -DWTF_USE_V8=1
 
-ifeq ($(DYNAMIC_SHARED_LIBV8SO),true)
 BINDING_C_INCLUDES := \
-	vendor/qcom/opensource/v8/include
-else
-BINDING_C_INCLUDES := \
-	external/v8/include
-endif
-
-BINDING_C_INCLUDES += \
+	external/v8/include \
+	\
 	$(LOCAL_PATH)/bindings/v8 \
 	$(LOCAL_PATH)/bindings/v8/custom \
 	$(LOCAL_PATH)/bindings/v8/specialization \
@@ -178,14 +170,8 @@ LOCAL_SRC_FILES += \
 	bindings/v8/custom/V8Uint16ArrayCustom.cpp \
 	bindings/v8/custom/V8Uint32ArrayCustom.cpp \
 	bindings/v8/custom/V8Uint8ArrayCustom.cpp \
-	bindings/v8/custom/V8Uint8ClampedArrayCustom.cpp \
 	bindings/v8/custom/V8WebKitAnimationCustom.cpp \
 	bindings/v8/custom/V8WebSocketCustom.cpp
-
-ifeq ($(ENABLE_WEBGL), true)
-LOCAL_SRC_FILES += \
-	bindings/v8/custom/V8WebGLRenderingContextCustom.cpp
-endif
 
 ifeq ($(ENABLE_SVG), true)
 LOCAL_SRC_FILES += \

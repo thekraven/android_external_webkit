@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2009 Google Inc. All rights reserved.
- * Copyright (C) 2012 Sony Mobile Communications AB
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -149,8 +148,6 @@ static v8::Handle<v8::Value> toV8Object(const WebGLGetInfo& info)
         return toV8(info.getWebGLTexture());
     case WebGLGetInfo::kTypeWebGLUnsignedByteArray:
         return toV8(info.getWebGLUnsignedByteArray());
-    case WebGLGetInfo::kTypeWebGLUnsignedIntArray:
-        return toV8(info.getWebGLUnsignedIntArray());
     case WebGLGetInfo::kTypeWebGLVertexArrayObjectOES:
         return toV8(info.getWebGLVertexArrayObjectOES());
     default:
@@ -164,27 +161,22 @@ static v8::Handle<v8::Value> toV8Object(WebGLExtension* extension, v8::Handle<v8
     if (!extension)
         return v8::Null();
     v8::Handle<v8::Value> extensionObject;
-    const char* referenceName;
     switch (extension->getName()) {
     case WebGLExtension::WebKitLoseContextName:
         extensionObject = toV8(static_cast<WebKitLoseContext*>(extension));
-        referenceName = "webKitLoseContextName";
         break;
     case WebGLExtension::OESStandardDerivativesName:
         extensionObject = toV8(static_cast<OESStandardDerivatives*>(extension));
-        referenceName = "oesStandardDerivativesName";
         break;
     case WebGLExtension::OESTextureFloatName:
         extensionObject = toV8(static_cast<OESTextureFloat*>(extension));
-        referenceName = "oesTextureFloatName";
         break;
     case WebGLExtension::OESVertexArrayObjectName:
         extensionObject = toV8(static_cast<OESVertexArrayObject*>(extension));
-        referenceName = "oesVertexArrayObjectName";
         break;
     }
     ASSERT(!extensionObject.IsEmpty());
-    V8DOMWrapper::setNamedHiddenReference(contextObject, referenceName, extensionObject);
+    V8DOMWrapper::setHiddenReference(contextObject, extensionObject);
     return extensionObject;
 }
 

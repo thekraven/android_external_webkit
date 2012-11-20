@@ -26,7 +26,6 @@
 #include "AXObjectCache.h"
 #include "AccessibilityObjectWrapperAtk.h"
 #include "AnimationController.h"
-#include "ApplicationCacheStorage.h"
 #include "DOMWrapperWorld.h"
 #include "Document.h"
 #include "Element.h"
@@ -45,7 +44,6 @@
 #include "JSNodeList.h"
 #include "JSRange.h"
 #include "JSValue.h"
-#include "MemoryCache.h" 
 #include "NodeList.h"
 #include "PageGroup.h"
 #include "PlatformString.h"
@@ -763,14 +761,3 @@ void DumpRenderTreeSupportGtk::rectangleForSelection(WebKitWebFrame* frame, GdkR
     rectangle->width = bounds.width();
     rectangle->height = bounds.height();
 }
-
-void DumpRenderTreeSupportGtk::clearMemoryCache() 
-{ 
-    memoryCache()->evictResources(); 
-}
-
-void DumpRenderTreeSupportGtk::clearApplicationCache() 
-{ 
-    cacheStorage().empty(); 
-    cacheStorage().vacuumDatabaseFile(); 
-} 

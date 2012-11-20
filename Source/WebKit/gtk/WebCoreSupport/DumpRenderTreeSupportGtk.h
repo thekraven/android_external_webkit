@@ -113,8 +113,6 @@ public:
     static void resetOriginAccessWhiteLists();
     static unsigned int workerThreadCount();
     static bool webkitWebFrameSelectionHasSpellingMarker(WebKitWebFrame*, gint from, gint length);
-	static void clearMemoryCache(); 
-	static void clearApplicationCache(); 
 
 private:
     static bool s_drtRun;
